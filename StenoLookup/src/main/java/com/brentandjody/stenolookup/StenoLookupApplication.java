@@ -9,6 +9,7 @@ import android.widget.ProgressBar;
 public class StenoLookupApplication extends Application {
 
     public static final String KEY_DICTIONARY_SIZE = "dictionary_size";
+    public static final String KEY_DICTIONARY_FILE = "dictionary_file";
 
     private Dictionary mDictionary;
 

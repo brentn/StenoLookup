@@ -51,11 +51,26 @@
                     android:gravity="right"
                     android:layout_marginTop="10dp">
 
+                    <ImageButton
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/menu_button"
+                        android:background="@drawable/hamburger"
+                        android:adjustViewBounds="false"
+                        android:cropToPadding="false"
+                        android:layout_weight="1" />
+
+                    <FrameLayout
+                        android:layout_width="0dp"
+                        android:layout_height="fill_parent"
+                        android:layout_weight="100"></FrameLayout>
+
                     <Button
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/clear"
-                        android:id="@+id/clear_button" />
+                        android:id="@+id/clear_button"
+                        android:layout_weight="1" />
 
                 </LinearLayout>
             </LinearLayout>
