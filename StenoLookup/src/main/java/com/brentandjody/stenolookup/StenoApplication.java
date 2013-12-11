@@ -6,7 +6,7 @@ import android.widget.ProgressBar;
 /**
  * Created by brent on 09/12/13.
  */
-public class StenoLookupApplication extends Application {
+public class StenoApplication extends Application {
 
     public static final String KEY_DICTIONARY_SIZE = "dictionary_size";
     public static final String KEY_DICTIONARY_FILE = "dictionary_file";

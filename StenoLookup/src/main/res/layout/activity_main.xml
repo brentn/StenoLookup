@@ -41,6 +41,7 @@
                     android:textAppearance="@android:style/TextAppearance.Holo.Large"
                     android:singleLine="false"
                     android:id="@+id/output"
+                    android:minLines="3"
                     android:layout_marginTop="15dp"
                     android:layout_marginLeft="15dp"
                     android:maxLines="30" />
@@ -60,10 +61,10 @@
                         android:cropToPadding="false"
                         android:layout_weight="1" />
 
-                    <FrameLayout
+                    <Space
                         android:layout_width="0dp"
                         android:layout_height="fill_parent"
-                        android:layout_weight="100"></FrameLayout>
+                        android:layout_weight="100" />
 
                     <Button
                         android:layout_width="wrap_content"
@@ -73,6 +74,16 @@
                         android:layout_weight="1" />
 
                 </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:id="@+id/dict_name"
+                    android:gravity="right"
+                    android:layout_marginRight="20dp"
+                    android:singleLine="true"
+                    android:textColor="#005878" />
             </LinearLayout>
         </ScrollView>
 

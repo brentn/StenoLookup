@@ -12,21 +12,13 @@ import android.preference.PreferenceManager;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
-import android.view.KeyEvent;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
-import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Queue;
 
 public class MainActivity extends Activity implements Dictionary.OnDictionaryLoadedListener, TextWatcher{
@@ -34,7 +26,7 @@ public class MainActivity extends Activity implements Dictionary.OnDictionaryLoa
     private static final String TAG = "StenoLookup";
     private static final int FILE_SELECT_CODE = 0;
 
-    private StenoLookupApplication App;
+    private StenoApplication App;
     private Dictionary mDictionary;
     private SharedPreferences prefs;
     private EditText input;
@@ -43,7 +35,7 @@ public class MainActivity extends Activity implements Dictionary.OnDictionaryLoa
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        App = ((StenoLookupApplication) getApplication());
+        App = ((StenoApplication) getApplication());
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
         setContentView(R.layout.activity_main);
@@ -53,7 +45,7 @@ public class MainActivity extends Activity implements Dictionary.OnDictionaryLoa
         output = (TextView) findViewById(R.id.output);
         input = (EditText) findViewById(R.id.input);
         input.addTextChangedListener(this);
-        ((Button) findViewById(R.id.clear_button)).setOnClickListener(new View.OnClickListener() {
+        (findViewById(R.id.clear_button)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 clearInput();
@@ -78,22 +70,23 @@ public class MainActivity extends Activity implements Dictionary.OnDictionaryLoa
     private void loadDictionary() {
         if (mDictionary.size() == 0 ) {
             if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-                String filename = prefs.getString(App.KEY_DICTIONARY_FILE, "");
+                String filename = prefs.getString(StenoApplication.KEY_DICTIONARY_FILE, "");
                 if (filename.isEmpty()) {
                     getDictionaryFilename();
                 } else {
-                    Log.d(TAG, "Storage path: "+  filename);
+                    TextView dictname = (TextView) findViewById(R.id.dict_name);
+                    dictname.setText("Dictionary file: " + filename.substring(filename.lastIndexOf("/")));
                     File file = new File(filename);
                     if (file.exists()) {
                         findViewById(R.id.overlay).setVisibility(View.VISIBLE);
                         findViewById(R.id.input).setVisibility(View.INVISIBLE);
                         ProgressBar progressBar = (ProgressBar) findViewById(R.id.progressBar);
                         progressBar.setProgress(0);
-                        int size = prefs.getInt(StenoLookupApplication.KEY_DICTIONARY_SIZE, 100000);
+                        int size = prefs.getInt(StenoApplication.KEY_DICTIONARY_SIZE, 100000);
                         mDictionary.load(filename, progressBar, size);
                     } else {
 
-                        prefs.edit().putString(App.KEY_DICTIONARY_FILE, "").commit();
+                        prefs.edit().putString(StenoApplication.KEY_DICTIONARY_FILE, "").commit();
                         throw new RuntimeException("File not found");
                     }
 
@@ -113,7 +106,7 @@ public class MainActivity extends Activity implements Dictionary.OnDictionaryLoa
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         try {
             startActivityForResult(
-                    Intent.createChooser(intent, "Select a File to Upload"),
+                    Intent.createChooser(intent, "Select your .json dictionary file"),
                     FILE_SELECT_CODE);
         } catch (android.content.ActivityNotFoundException ex) {
             // Potentially direct the user to the Market with a Dialog
@@ -133,7 +126,10 @@ public class MainActivity extends Activity implements Dictionary.OnDictionaryLoa
             // Get the path
             String path = getPath(this, uri);
             Log.d(TAG, "File Path: " + path);
-            prefs.edit().putString(App.KEY_DICTIONARY_FILE, path).commit();
+            prefs.edit().putString(StenoApplication.KEY_DICTIONARY_FILE, path).commit();
+            TextView dictname = (TextView) findViewById(R.id.dict_name);
+            dictname.setText("Dictionary file: "+path.substring(path.lastIndexOf("/")));
+            mDictionary.unload();
             loadDictionary();
         }
         break;
@@ -144,7 +140,7 @@ public class MainActivity extends Activity implements Dictionary.OnDictionaryLoa
     public static String getPath(Context context, Uri uri) {
         if ("content".equalsIgnoreCase(uri.getScheme())) {
             String[] projection = { "_data" };
-            Cursor cursor = null;
+            Cursor cursor;
 
             try {
                 cursor = context.getContentResolver().query(uri, projection, null, null, null);
