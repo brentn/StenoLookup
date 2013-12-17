@@ -41,23 +41,31 @@ public class Dictionary {
         onDictionaryLoadedListener = listener;
     }
 
-    public void load(String filename, ProgressBar progressBar, int size) {
-        Log.d(TAG, "loading dictionary");
-        String extension = filename.substring(filename.lastIndexOf("."));
-        if (Arrays.asList(DICTIONARY_TYPES).contains(extension)) {
-            try {
-                File file = new File(filename);
-                if (!file.exists()) {
-                    throw new IOException("Dictionary file could not be found.");
+    public void load(String[] filenames, ProgressBar progressBar, int size) {
+        Log.d(TAG, "loading dictionaries");
+        for (String filename : filenames) {
+            if (!filename.equals("null")) {
+                if (filename.contains(".")) {
+                    String extension = filename.substring(filename.lastIndexOf("."));
+                    if (Arrays.asList(DICTIONARY_TYPES).contains(extension)) {
+                        try {
+                            File file = new File(filename);
+                            if (!file.exists()) {
+                                throw new IOException("Dictionary file could not be found.");
+                            }
+                        } catch (IOException e) {
+                            System.err.println("Dictionary File: "+filename+" could not be found");
+                        }
+                    } else {
+                        throw new IllegalArgumentException(extension + " is not an accepted dictionary format.");
+                    }
+                } else {
+                    throw new IllegalArgumentException("Illegal filename:" +filename);
                 }
-            } catch (IOException e) {
-                System.err.println("Dictionary File: "+filename+" could not be found");
             }
-        } else {
-            throw new IllegalArgumentException(extension + " is not an accepted dictionary format.");
         }
 
-        new JsonLoader(progressBar, size).execute(filename);
+        new JsonLoader(progressBar, size).execute(filenames);
     }
 
     public Queue<String> lookup(String english) {

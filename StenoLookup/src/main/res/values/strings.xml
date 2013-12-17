@@ -4,6 +4,7 @@
     <string name="app_name">Steno Lookup Tool</string>
     <string name="action_settings">Settings</string>
     <string name="clear">Clear</string><string name="loading">Loading dictionary</string>
+    <string name="dictionaries">Dictionaries</string>
     <string name="choose_dictionary">Choose dictionary</string>
 
 </resources>

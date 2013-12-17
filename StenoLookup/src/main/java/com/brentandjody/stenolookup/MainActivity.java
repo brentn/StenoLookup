@@ -23,8 +23,8 @@ import java.util.Queue;
 
 public class MainActivity extends Activity implements Dictionary.OnDictionaryLoadedListener, TextWatcher{
 
+    private static final int CHOOSE_DICTIONARIES_CODE = 1;
     private static final String TAG = "StenoLookup";
-    private static final int FILE_SELECT_CODE = 0;
 
     private StenoApplication App;
     private Dictionary mDictionary;
@@ -55,7 +55,8 @@ public class MainActivity extends Activity implements Dictionary.OnDictionaryLoa
         (findViewById(R.id.menu_button)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                getDictionaryFilename();
+                Intent i = new Intent(getApplicationContext(), SettingsActivity.class);
+                startActivityForResult(i, CHOOSE_DICTIONARIES_CODE);
             }
         });
     }
@@ -70,26 +71,19 @@ public class MainActivity extends Activity implements Dictionary.OnDictionaryLoa
     private void loadDictionary() {
         if (mDictionary.size() == 0 ) {
             if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-                String filename = prefs.getString(StenoApplication.KEY_DICTIONARY_FILE, "");
-                if (filename.isEmpty()) {
-                    getDictionaryFilename();
+                String dictionaries = prefs.getString(StenoApplication.KEY_DICTIONARIES, "");
+                if (dictionaries.isEmpty()) {
+                    Intent i = new Intent(getApplicationContext(), SettingsActivity.class);
+                    startActivityForResult(i, CHOOSE_DICTIONARIES_CODE);
                 } else {
                     TextView dictname = (TextView) findViewById(R.id.dict_name);
-                    dictname.setText("Dictionary file: " + filename.substring(filename.lastIndexOf("/")));
-                    File file = new File(filename);
-                    if (file.exists()) {
-                        findViewById(R.id.overlay).setVisibility(View.VISIBLE);
-                        findViewById(R.id.input).setVisibility(View.INVISIBLE);
-                        ProgressBar progressBar = (ProgressBar) findViewById(R.id.progressBar);
-                        progressBar.setProgress(0);
-                        int size = prefs.getInt(StenoApplication.KEY_DICTIONARY_SIZE, 100000);
-                        mDictionary.load(filename, progressBar, size);
-                    } else {
-
-                        prefs.edit().putString(StenoApplication.KEY_DICTIONARY_FILE, "").commit();
-                        throw new RuntimeException("File not found");
-                    }
-
+                    dictname.setText("Dictionary file: " + dictionaries);
+                    findViewById(R.id.overlay).setVisibility(View.VISIBLE);
+                    findViewById(R.id.input).setVisibility(View.INVISIBLE);
+                    ProgressBar progressBar = (ProgressBar) findViewById(R.id.progressBar);
+                    progressBar.setProgress(0);
+                    int size = prefs.getInt(StenoApplication.KEY_DICTIONARY_SIZE, 100000);
+                    mDictionary.load(dictionaries.split(":"), progressBar, size);
                 }
             } else {
                 Toast.makeText(this, "Dictionary media not mounted", Toast.LENGTH_SHORT).show();
@@ -100,64 +94,6 @@ public class MainActivity extends Activity implements Dictionary.OnDictionaryLoa
         }
     }
 
-    private void getDictionaryFilename() {
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("*/*");
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        try {
-            startActivityForResult(
-                    Intent.createChooser(intent, "Select your .json dictionary file"),
-                    FILE_SELECT_CODE);
-        } catch (android.content.ActivityNotFoundException ex) {
-            // Potentially direct the user to the Market with a Dialog
-            Toast.makeText(this, "Please install a File Manager.",
-                    Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-    switch (requestCode) {
-        case FILE_SELECT_CODE:
-        if (resultCode == RESULT_OK) {
-            // Get the Uri of the selected file
-            Uri uri = data.getData();
-            Log.d(TAG, "File Uri: " + uri.toString());
-            // Get the path
-            String path = getPath(this, uri);
-            Log.d(TAG, "File Path: " + path);
-            prefs.edit().putString(StenoApplication.KEY_DICTIONARY_FILE, path).commit();
-            TextView dictname = (TextView) findViewById(R.id.dict_name);
-            dictname.setText("Dictionary file: "+path.substring(path.lastIndexOf("/")));
-            mDictionary.unload();
-            loadDictionary();
-        }
-        break;
-    }
-    super.onActivityResult(requestCode, resultCode, data);
-}
-
-    public static String getPath(Context context, Uri uri) {
-        if ("content".equalsIgnoreCase(uri.getScheme())) {
-            String[] projection = { "_data" };
-            Cursor cursor;
-
-            try {
-                cursor = context.getContentResolver().query(uri, projection, null, null, null);
-                int column_index = cursor.getColumnIndexOrThrow("_data");
-                if (cursor.moveToFirst()) {
-                    return cursor.getString(column_index);
-                }
-            } catch (Exception e) {
-                // Eat it
-            }
-        }
-        else if ("file".equalsIgnoreCase(uri.getScheme())) {
-            return uri.getPath();
-        }
-
-        return null;
-    }
 
     private void unlockInput() {
         findViewById(R.id.overlay).setVisibility(View.INVISIBLE);
@@ -173,6 +109,15 @@ public class MainActivity extends Activity implements Dictionary.OnDictionaryLoa
     @Override
     public void onTextChanged(CharSequence text, int i, int i2, int i3) {
 
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == CHOOSE_DICTIONARIES_CODE) {
+            mDictionary.unload();
+            loadDictionary();
+        }
     }
 
     @Override

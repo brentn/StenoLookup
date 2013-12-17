@@ -9,7 +9,7 @@ import android.widget.ProgressBar;
 public class StenoApplication extends Application {
 
     public static final String KEY_DICTIONARY_SIZE = "dictionary_size";
-    public static final String KEY_DICTIONARY_FILE = "dictionary_file";
+    public static final String KEY_DICTIONARIES = "dictionaries";
 
     private Dictionary mDictionary;
 
