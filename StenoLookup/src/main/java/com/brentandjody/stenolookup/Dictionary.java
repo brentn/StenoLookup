@@ -1,5 +1,6 @@
 package com.brentandjody.stenolookup;
 
+import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
@@ -74,20 +75,20 @@ public class Dictionary {
     private class JsonLoader extends AsyncTask<String, Integer, Long> {
         private int loaded;
         private int total_size;
+        private TST forwardLookup;
         private ProgressBar progressBar;
 
         public JsonLoader(ProgressBar progress, int size) {
             progressBar = progress;
             total_size = size;
+            forwardLookup = new TST<String>();
         }
 
         protected Long doInBackground(String... filenames) {
             loaded = 0;
-            StrokeComparator compareByStrokeLength = new StrokeComparator();
             int update_interval = total_size/100;
             if (update_interval == 0) update_interval=1;
             String line, stroke, english;
-            Queue<String> strokes;
             String[] fields;
             for (String filename : filenames) {
                 if (filename == null || filename.isEmpty())
@@ -101,11 +102,7 @@ public class Dictionary {
                         if ((fields.length >= 3) && (fields[3].length() > 0)) {
                             stroke = fields[1];
                             english = fields[3];
-                            strokes = mDictionary.get(english);
-                            if (strokes==null)
-                                strokes = new PriorityQueue<String>(3, compareByStrokeLength);
-                            strokes.add(stroke);
-                            mDictionary.put(english, strokes);
+                            forwardLookup.put(stroke, english);
                             loaded++;
                             if (loaded%update_interval==0) {
                                 onProgressUpdate(loaded);
@@ -131,6 +128,20 @@ public class Dictionary {
         @Override
         protected void onPostExecute(Long result) {
             super.onPostExecute(result);
+            Log.d(TAG, "Setup Reverse Lookup");
+            String english, stroke;
+            Queue<String> strokes;
+            StrokeComparator compareByStrokeLength = new StrokeComparator();
+            for (Object key : forwardLookup.keys()) {
+                stroke = (String) key;
+                english = (String) forwardLookup.get(stroke);
+                strokes = mDictionary.get(english);
+                if (strokes==null)
+                    strokes = new PriorityQueue<String>(3, compareByStrokeLength);
+                strokes.add(stroke);
+                mDictionary.put(english, strokes);
+            }
+            forwardLookup = null; // garbage collect
             Log.d(TAG, "Finished Loading");
             int size = safeLongToInt(result);
             SharedPreferences.Editor editor = prefs.edit();
